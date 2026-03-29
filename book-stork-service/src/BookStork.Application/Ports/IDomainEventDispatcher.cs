@@ -1,6 +1,9 @@
-﻿namespace BookStork.Application.Ports;
+﻿using BookStork.Domain.Abstractions;
+using BookStork.Domain.Entities;
 
-public class IDomainEventDispatcher
+namespace BookStork.Application.Ports;
+
+public interface IDomainEventDispatcher
 {
-    
+    Task DispatchAsync(IEnumerable<AggregateRoot> aggregates, CancellationToken cancellationToken = default);
 }

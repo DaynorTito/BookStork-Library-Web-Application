@@ -1,6 +1,13 @@
-﻿namespace BookStork.Application.Common;
+﻿using BookStork.Domain.Abstractions;
 
-public class DomainEventWrapper
+namespace BookStork.Application.Common;
+using MediatR;
+
+public sealed class DomainEventWrapper<TEvent> : INotification
+    where TEvent : IDomainEvent
 {
-    
+    public TEvent DomainEvent { get; }
+
+    public DomainEventWrapper(TEvent domainEvent)
+        => DomainEvent = domainEvent;
 }

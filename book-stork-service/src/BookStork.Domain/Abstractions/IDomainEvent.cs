@@ -1,6 +1,7 @@
 ﻿namespace BookStork.Domain.Abstractions;
 
-public class IDomainEvent
+public interface IDomainEvent
 {
-    
+    Guid EventId { get; }
+    DateTime OccurredOn { get; }
 }

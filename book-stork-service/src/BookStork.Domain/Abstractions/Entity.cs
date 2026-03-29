@@ -1,24 +1,16 @@
-﻿namespace BookStork.Domain.Entities;
+﻿using BookStork.Domain.Abstractions;
 
-public abstract class Entity<TId>
+namespace BookStork.Domain.Entities;
+
+public abstract class Entity<TId> : AggregateRoot
 {
     private readonly List<IDomainEvent> _domainEvents = [];
  
-    protected Entity(TId id)
-    {
-        Id = id;
-    }
- 
-    public TId Id { get; protected set; }
- 
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
- 
-    protected void RaiseDomainEvent(IDomainEvent domainEvent)
-        => _domainEvents.Add(domainEvent);
- 
-    public void ClearDomainEvents()
-        => _domainEvents.Clear();
- 
+    protected Entity(TId id) => Id = id;
+    protected Entity() { }
+
+    public TId Id { get; protected set; } = default!;
+
     public override bool Equals(object? obj)
     {
         if (obj is not Entity<TId> other) return false;
@@ -26,13 +18,8 @@ public abstract class Entity<TId>
         if (GetType() != other.GetType()) return false;
         return EqualityComparer<TId>.Default.Equals(Id, other.Id);
     }
- 
-    public override int GetHashCode()
-        => HashCode.Combine(GetType(), Id);
- 
-    public static bool operator ==(Entity<TId>? left, Entity<TId>? right)
-        => left?.Equals(right) ?? right is null;
- 
-    public static bool operator !=(Entity<TId>? left, Entity<TId>? right)
-        => !(left == right);
+
+    public override int GetHashCode() => HashCode.Combine(GetType(), Id);
+    public static bool operator ==(Entity<TId>? a, Entity<TId>? b) => a?.Equals(b) ?? b is null;
+    public static bool operator !=(Entity<TId>? a, Entity<TId>? b) => !(a == b);
 }

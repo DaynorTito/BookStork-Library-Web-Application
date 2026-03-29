@@ -1,44 +1,67 @@
+using BookStork.Api.Extensions;
+using BookStork.Api.Middleware;
+using BookStork.Application.DependencyInjection;
+using BookStork.Infrastructure.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using UserManagement.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddControllers();
+builder.Services.AddApplicationServices();
+
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
+builder.Services.AddSwaggerDocumentation();
+
 
 var app = builder.Build();
+
+await ApplyMigrationsAsync(app);
+
+app.UseSwaggerDocumentation();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwaggerDocumentation();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+static async Task ApplyMigrationsAsync(WebApplication app)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider
+        .GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+ 
+        logger.LogInformation(
+            "[DB] Aplicando migraciones — ambiente: {Env}",
+            app.Environment.EnvironmentName);
+
+        await db.Database.MigrateAsync();
+ 
+        logger.LogInformation("[DB] Migraciones OK.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "[DB] Error al migrar. La app no iniciará.");
+        throw;
+    }
 }

@@ -1,0 +1,15 @@
+Catalogo de libros obteniendo una API Publica, información detallada
+Búsqueda por palabras clase+filtrado por categorías y opciones de ordenación por autor, gener, popularidad.
+
+Prestamos de libros, seguimientos a lementos prestados, fechas de vencimiento
+
+
+Prestamo de libros y hacer seguimiento de fechas de vencimiento
+
+Rservas para libros actualmente prestados
+
+Historial de prestamos, rastreador de estados de usuario leyendo completado lista de deseos
+
+
+Lista de deseos que quieren eler en el futuro, notifiaciones cuando los libros esten listos para la lectira
+
