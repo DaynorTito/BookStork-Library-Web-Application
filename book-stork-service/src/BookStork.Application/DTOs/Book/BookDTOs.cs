@@ -1,97 +1,86 @@
 ﻿namespace BookStork.Application.DTOs.Book;
 
-public sealed class CreateBookDTO
-{
-    public string ISBN { get; set; }
-    public string Name { get; set; }
-    public string Author { get; set; }
-    public string Publisher { get; set; }
-    public DateOnly PublishedDate { get; set; }
-    public string Description { get; set; }
-    public int PageCount { get; set; }
-    public Guid CategoryId { get; set; }
-    public decimal Height { get; set; }
-    public decimal Weight { get; set; }
-    public decimal Thickness { get; set; }
-    public decimal AverageRating { get; set; }
-    public string Language { get; set; }
-    public List<string> Images { get; set; } = new();
-}
+public sealed record BookListDto(
+    Guid Id,
+    string ISBN,
+    string Title,
+    string AuthorName,
+    string CategoryName,
+    List<string> Genres,
+    string Language,
+    decimal AverageRating,
+    string Status,
+    int AvailableCopies,
+    int TotalCopies,
+    DateOnly PublishedDate,
+    string? CoverImageUrl);
+ 
+public sealed record BookDetailDto(
+    Guid Id,
+    string ISBN,
+    string Title,
+    Guid AuthorId,
+    string AuthorName,
+    Guid CategoryId,
+    string CategoryName,
+    List<GenreDto> Genres,
+    string Publisher,
+    DateOnly PublishedDate,
+    string Description,
+    int PageCount,
+    decimal Height,
+    decimal Weight,
+    decimal Thickness,
+    string Language,
+    decimal AverageRating,
+    string Status,
+    int AvailableCopies,
+    int TotalCopies,
+    List<string> Images,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+ 
+public sealed record CreateBookRequest(
+    string ISBN,
+    string Title,
+    Guid AuthorId,
+    Guid CategoryId,
+    List<Guid> GenreIds,
+    string Publisher,
+    DateOnly PublishedDate,
+    string Description,
+    int PageCount,
+    decimal Height,
+    decimal Weight,
+    decimal Thickness,
+    string Language,
+    decimal AverageRating,
+    int TotalCopies,
+    List<string> Images);
+ 
+public sealed record UpdateBookRequest(
+    string Title,
+    Guid AuthorId,
+    Guid CategoryId,
+    List<Guid> GenreIds,
+    string Publisher,
+    DateOnly PublishedDate,
+    string Description,
+    int PageCount,
+    decimal Height,
+    decimal Weight,
+    decimal Thickness,
+    string Language);
+ 
+public sealed record BookFilterRequest(
+    string? Title = null,
+    string? AuthorName = null,
+    Guid? GenreId = null,
+    Guid? CategoryId = null,
+    string? Keyword = null,
+    string? Language = null,
+    string SortBy = "Title",
+    bool Ascending = true,
+    int Page = 1,
+    int PageSize = 10);
 
-public sealed class ListBookDTO
-{
-    public Guid Id { get; set; }
-    public string ISBN { get; set; }
-    public string Name { get; set; }
-    public string Author { get; set; }
-    public string Publisher { get; set; }
-    public DateOnly PublishedDate { get; set; }
-    public string Description { get; set; }
-    public int PageCount { get; set; }
-    public string Category { get; set; }
-    public decimal Height { get; set; }
-    public decimal Weight { get; set; }
-    public decimal Thickness { get; set; }
-    public decimal AverageRating { get; set; }
-    public string Language { get; set; }
-    public List<string> Images { get; set; } = new();
-}
-
-public sealed class BookDetailDTO
-{
-    public Guid Id { get; set; }
-    public string ISBN { get; set; }
-    public string Name { get; set; }
-    public string Author { get; set; }
-    public string Publisher { get; set; }
-    public DateOnly PublishedDate { get; set; }
-    public string Description { get; set; }
-    public int PageCount { get; set; }
-    public Guid CategoryId { get; set; }
-    public decimal Height { get; set; }
-    public decimal Weight { get; set; }
-    public decimal Thickness { get; set; }
-    public decimal AverageRating { get; set; }
-    public string Language { get; set; }
-    public List<string> Images { get; set; } = new();
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-}
-
-public sealed class UpdateBookDTO
-{
-    public string Name { get; set; }
-    public string Author { get; set; }
-    public string Publisher { get; set; }
-    public DateOnly PublishedDate { get; set; }
-    public string Description { get; set; }
-    public int PageCount { get; set; }
-    public Guid CategoryId { get; set; }
-    public decimal Height { get; set; }
-    public decimal Weight { get; set; }
-    public decimal Thickness { get; set; }
-    public decimal AverageRating { get; set; }
-    public string Language { get; set; }
-}
-
-public sealed class PagedResult<T>
-{
-    public IReadOnlyList<T> Items { get; set; } = new List<T>();
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-    public int TotalCount { get; set; }
-
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
-    public bool HasNextPage => Page < TotalPages;
-    public bool HasPreviousPage => Page > 1;
-
-    public PagedResult() {}
-
-    public PagedResult(IReadOnlyList<T> items, int page, int pageSize, int totalCount)
-    {
-        Items = items;
-        Page = page;
-        PageSize = pageSize;
-        TotalCount = totalCount;
-    }
-}
