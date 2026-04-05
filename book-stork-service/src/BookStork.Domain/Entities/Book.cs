@@ -12,14 +12,28 @@ public sealed class Book : Entity<BookId>
     private readonly List<GenreId> _genreIds = [];
     private readonly List<AuthorId> _authorIds = [];
 
+    private Book() : base(default!) { }
 
-    private Book() : base(default) {}
-    public Book(BookId id, string isbn, string name, List<AuthorId> authorIds, string publisher, DateOnly publishedDate, string description, int totalCopies,
-        int pageCount, BookDimensions dimensions, CategoryId categoryId, BookMetadata metadata, List<BookImage> images, DateTime createdDate) : base(id)
+
+    public Book(
+        BookId id,
+        string isbn,
+        string name,
+        List<AuthorId> authorIds,
+        string publisher,
+        DateOnly publishedDate,
+        string description,
+        int totalCopies,
+        int pageCount,
+        BookDimensions dimensions,
+        CategoryId categoryId,
+        BookMetadata metadata,
+        List<BookImage> images,
+        DateTime createdDate) : base(id)
     {
         ISBN = isbn;
         Name = name;
-        AuthorIds = authorIds;
+        _authorIds.AddRange(authorIds);
         Publisher = publisher;
         PublishedDate = publishedDate;
         Description = description;
@@ -30,53 +44,116 @@ public sealed class Book : Entity<BookId>
         Metadata = metadata;
         Images = images;
         DateCreated = createdDate;
+
+        AvailableCopies = totalCopies;
+        Status = BookAvailabilityStatus.Available;
     }
 
     public string ISBN { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
-    
-    public List<AuthorId> AuthorIds { get; set; }
-    public string Publisher { get; set; }
-    public DateOnly PublishedDate { get; set; }
-    public string Description { get; set; }
-    public int PageCount { get; set; }
-    public BookDimensions Dimensions { get; set; }
+
+    public IReadOnlyList<AuthorId> AuthorIds => _authorIds.AsReadOnly();
+
+    public string Publisher { get; private set; } = string.Empty;
+    public DateOnly PublishedDate { get; private set; }
+    public string Description { get; private set; } = string.Empty;
+    public int PageCount { get; private set; }
+    public BookDimensions Dimensions { get; private set; } = default!;
     public CategoryId CategoryId { get; private set; } = default!;
-    public BookMetadata Metadata { get; set; }
+    public BookMetadata Metadata { get; private set; } = default!;
     public int TotalCopies { get; private set; }
     public int AvailableCopies { get; private set; }
     public BookAvailabilityStatus Status { get; private set; } = default!;
-    public List<BookImage> Images { get; set; }
+    public List<BookImage> Images { get; private set; } = [];
     public IReadOnlyList<GenreId> GenreIds => _genreIds.AsReadOnly();
-    
-    public DateTime DateCreated { get; set; }
-    
+    public DateTime DateCreated { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
-    
 
-    public void UpdateDimensions(decimal height, decimal weight, decimal thickness)
+    public static Book Create(
+        string isbn,
+        string name,
+        List<AuthorId> authorIds,
+        string publisher,
+        DateOnly publishedDate,
+        string description,
+        int pageCount,
+        decimal height,
+        decimal weight,
+        decimal thickness,
+        CategoryId categoryId,
+        string language,
+        int totalCopies,
+        decimal averageRating,
+        List<BookImage> images,
+        List<GenreId> genreIds)
     {
-        Dimensions = new BookDimensions(height, weight, thickness);
-    }
+        if (totalCopies < 1)
+            throw new DomainException("The Book must have at least one copies");
 
-    public static Book Create(string isbn, string name,  List<AuthorId> authorIds, string publisher, DateOnly publishedDate, 
-        string description, int pageCount, decimal height, decimal weight, decimal thickness, CategoryId categoryId,
-        string language, int totalCopies, decimal averageRating, List<BookImage> images, List<GenreId> genreIds)
-    { 
-        var now = DateTime.UtcNow;
         var id = BookId.New();
-        var dimensions = new BookDimensions(height, weight, thickness);
-        var metadata = new BookMetadata(language, averageRating);
-        var book = new Book(id, isbn, name, authorIds, publisher, publishedDate, description, totalCopies, pageCount,  
-            dimensions, categoryId, metadata, images, now);
-        
-        book._genreIds.AddRange(genreIds);
+        var now = DateTime.UtcNow;
 
-        book.RaiseDomainEvent(new BookCreatedEvent(id, name, description, now));
-        
+        var book = new Book(
+            id, isbn, name, authorIds, publisher, publishedDate,
+            description, totalCopies, pageCount,
+            new BookDimensions(height, weight, thickness),
+            categoryId,
+            new BookMetadata(language, averageRating),
+            images, now);
+
+        book._genreIds.AddRange(genreIds);
+        book.RaiseDomainEvent(new BookCreatedEvent(id, name, isbn, now));
+
         return book;
     }
-    
+
+    public static Book Rehydrate(
+        BookId id,
+        string isbn,
+        string name,
+        List<AuthorId> authorIds,
+        string publisher,
+        DateOnly publishedDate,
+        string description,
+        int totalCopies,
+        int pageCount,
+        BookDimensions dimensions,
+        CategoryId categoryId,
+        BookMetadata metadata,
+        List<BookImage> images,
+        List<GenreId> genreIds,
+        int availableCopies,
+        BookAvailabilityStatus status,
+        DateTime createdDate,
+        DateTime? updatedAt)
+    {
+        var book = new Book(
+            id,
+            isbn,
+            name,
+            authorIds,
+            publisher,
+            publishedDate,
+            description,
+            totalCopies,
+            pageCount,
+            dimensions,
+            categoryId,
+            metadata,
+            images,
+            createdDate
+        );
+
+        book.AvailableCopies = availableCopies;
+        book.Status = status;
+        book.UpdatedAt = updatedAt;
+
+        foreach (var gid in genreIds)
+            book._genreIds.Add(gid);
+
+        return book;
+    }
+
     public void Update(
         string name,
         List<AuthorId> authorIds,
@@ -93,7 +170,8 @@ public sealed class Book : Entity<BookId>
         List<GenreId> genreIds)
     {
         Name = name;
-        AuthorIds = authorIds;
+        _authorIds.Clear();
+        _authorIds.AddRange(authorIds);
         Publisher = publisher;
         PublishedDate = publishedDate;
         Description = description;
@@ -103,39 +181,36 @@ public sealed class Book : Entity<BookId>
         Metadata = new BookMetadata(language, averageRating);
         _genreIds.Clear();
         _genreIds.AddRange(genreIds);
-        _authorIds.Clear();
-        _authorIds.AddRange(authorIds);
         UpdatedAt = DateTime.UtcNow;
- 
         RaiseDomainEvent(new BookUpdatedEvent(Id, Name, UpdatedAt.Value));
     }
-    
+
     public void RegisterLoan()
     {
         if (AvailableCopies <= 0)
-            throw new DomainException($"There are not copies available for '{Name}'.");
- 
+            throw new DomainException($"There are not copies for book: '{Name}'.");
+
         AvailableCopies--;
         RefreshStatus();
         UpdatedAt = DateTime.UtcNow;
     }
- 
+
     public void RegisterReturn()
     {
         if (AvailableCopies >= TotalCopies)
-            throw new DomainException("There are not copies available for the return.");
- 
+            throw new DomainException("There are no active loans for this book.");
+
         AvailableCopies++;
         RefreshStatus();
         UpdatedAt = DateTime.UtcNow;
         RaiseDomainEvent(new BookReturnedEvent(Id, Name, AvailableCopies, UpdatedAt.Value));
     }
-    
+
     public void RegisterReservation()
     {
         if (AvailableCopies > 0)
-            throw new DomainException("You cannot reserve a reservation for a book with available copies.");
- 
+            throw new DomainException("Cannot reserve a book with available copies.");
+
         Status = BookAvailabilityStatus.Reserved;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -145,10 +220,24 @@ public sealed class Book : Entity<BookId>
         RefreshStatus();
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void UpdateRating(decimal newRating)
     {
         Metadata = new BookMetadata(Metadata.Language, newRating);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsAvailable() => AvailableCopies > 0;
+
+    public void AddImage(string url)
+    {
+        Images.Add(new BookImage(url));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RemoveImage(string url)
+    {
+        Images.RemoveAll(i => i.Url == url);
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -157,19 +246,5 @@ public sealed class Book : Entity<BookId>
         Status = AvailableCopies > 0
             ? BookAvailabilityStatus.Available
             : BookAvailabilityStatus.Borrowed;
-    }
-    
-    public bool IsAvailable() => AvailableCopies > 0;
-
-    public void AddImage(string url)
-    {
-        Images.Add(new BookImage(url));
-        UpdatedAt = DateTime.UtcNow;
-    }
- 
-    public void RemoveImage(string url)
-    {
-        Images.RemoveAll(i => i.Url == url);
-        UpdatedAt = DateTime.UtcNow;
     }
 }

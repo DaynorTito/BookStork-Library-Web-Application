@@ -9,7 +9,7 @@ namespace BookStork.Application.Books.Queries;
 
 
 public sealed record GetAllBooksQuery(int Page = 1, int PageSize = 10)
-    : IRequest<PagedResult<ListBookDTO>>;
+    : IRequest<PagedResult<BookDetailDto>>;
  
 public sealed class GetAllBooksQueryValidator : AbstractValidator<GetAllBooksQuery>
 {
@@ -21,26 +21,15 @@ public sealed class GetAllBooksQueryValidator : AbstractValidator<GetAllBooksQue
 }
  
 public sealed class GetAllBooksQueryHandler
-    : IRequestHandler<GetAllBooksQuery, PagedResult<ListBookDTO>>
+    : IRequestHandler<GetAllBooksQuery, PagedResult<BookDetailDto>>
 {
-    private readonly IBookRepository _bookRepository;
-    private readonly IMapper _mapper;
- 
-    public GetAllBooksQueryHandler(IBookRepository bookRepository, IMapper mapper)
+    private readonly IBookQueryService _query;
+    public GetAllBooksQueryHandler(IBookQueryService query) => _query = query;
+
+    public async Task<PagedResult<BookDetailDto>> Handle(
+        GetAllBooksQuery r, CancellationToken ct)
     {
-        _bookRepository = bookRepository;
-        _mapper = mapper;
-    }
- 
-    public async Task<PagedResult<ListBookDTO>> Handle(
-        GetAllBooksQuery request,
-        CancellationToken cancellationToken)
-    {
-        var (books, totalCount) = await _bookRepository.GetAllPageAsync(
-            request.Page, request.PageSize, cancellationToken);
- 
-        var dtos = _mapper.Map<List<ListBookDTO>>(books.ToList());
-        
-        return new PagedResult<ListBookDTO>(dtos, request.Page, request.PageSize, totalCount);
+        var (items, total) = await _query.GetAllPagedAsync(r.Page, r.PageSize, ct);
+        return new PagedResult<BookDetailDto>(items, r.Page, r.PageSize, total);
     }
 }

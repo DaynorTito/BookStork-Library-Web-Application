@@ -28,7 +28,7 @@ public interface IBookRepository
 
 public sealed record BookFilter(
     string? Title = null,
-    string? AuthorName = null,
+    Guid? AuthorId = null,
     Guid? GenreId = null,
     Guid? CategoryId = null,
     string? Keyword = null,

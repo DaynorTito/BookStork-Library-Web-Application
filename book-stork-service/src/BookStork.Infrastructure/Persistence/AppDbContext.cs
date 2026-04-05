@@ -7,15 +7,24 @@ namespace UserManagement.Infrastructure.Persistence;
 
 public sealed class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-        
-    }
-    
-    private readonly IMediator _mediator;
-    
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<BookEntity> Books => Set<BookEntity>();
+    public DbSet<AuthorEntity> Authors => Set<AuthorEntity>();
+    public DbSet<GenreEntity> Genres => Set<GenreEntity>();
+    public DbSet<CategoryEntity> Categories => Set<CategoryEntity>();
     public DbSet<BookImageEntity> BookImages => Set<BookImageEntity>();
+    public DbSet<BookGenreEntity> BookGenres => Set<BookGenreEntity>();
+
+    public DbSet<BookAuthorEntity> BookAuthors => Set<BookAuthorEntity>();
+
+    public DbSet<LoanEntity> Loans => Set<LoanEntity>();
+    public DbSet<ReservationEntity> Reservations => Set<ReservationEntity>();
+    public DbSet<UserBookStatusEntity> UserBookStatuses => Set<UserBookStatusEntity>();
+
+    public DbSet<WishlistItemEntity> WishlistItems => Set<WishlistItemEntity>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,13 +34,7 @@ public sealed class AppDbContext : DbContext
 
   //  private async Task DispatchDomainEventsAsync(CancellationToken cancellationToken)
    // {
-        // Recopila todas las entidades de dominio trackeadas por EF que tienen eventos
-        // NOTA: necesitamos que el ChangeTracker conozca las entidades de dominio.
-        // Como usamos entidades separadas (UserEntity vs User), este enfoque
-        // requiere guardar los agregados en el contexto de otra forma (ver Opción C).
-        //
-        // Si usas EF Core directamente sobre las entidades de dominio (sin separación),
-        // puedes hacer:
+
         //
         // var domainEntities = ChangeTracker.Entries<Entity<object>>()
         //     .Where(e => e.Entity.DomainEvents.Any())

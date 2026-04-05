@@ -10,16 +10,16 @@ public sealed class ReservationStatus : ValueObject
     public static readonly ReservationStatus Fulfilled = new("FULFILLED");
     public static readonly ReservationStatus Cancelled = new("CANCELLED");
     public static readonly ReservationStatus Expired   = new("EXPIRED");
- 
+
     public static ReservationStatus From(string value) => value.ToUpper() switch
     {
         "PENDING"   => Pending,
         "FULFILLED" => Fulfilled,
         "CANCELLED" => Cancelled,
         "EXPIRED"   => Expired,
-        _ => throw new DomainException($"Estado de reserva inválido: {value}")
+        _ => throw new DomainException($"Invalid reservation status: {value}")
     };
- 
+
     protected override IEnumerable<object?> GetEqualityComponents() { yield return Value; }
     public override string ToString() => Value;
 }

@@ -1,16 +1,18 @@
-﻿namespace BookStork.Application.DTOs;
+﻿using BookStork.Application.DTOs.Book;
 
-public sealed record LoanDto(
-    Guid Id,
-    Guid UserId,
-    string UserFullName,
-    Guid BookId,
-    string BookTitle,
-    string Status,
-    DateTime LoanedAt,
-    DateTime DueDate,
-    DateTime? ReturnedAt,
-    bool IsOverdue,
-    int DaysRemaining);
- 
+namespace BookStork.Application.DTOs;
+
+public sealed class LoanDto
+{
+    public Guid Id { get; init; }
+    public Guid UserId { get; init; }
+    public string UserFullName { get; init; } = string.Empty;
+    public BookSummaryDto Book { get; init; } = null!;
+    public string Status { get; init; } = string.Empty;
+    public DateTime LoanedAt { get; init; }
+    public DateTime DueDate { get; init; }
+    public DateTime? ReturnedAt { get; init; }
+    public bool IsOverdue { get; init; }
+    public int DaysRemaining { get; init; }
+}
 public sealed record CreateLoanRequest(Guid UserId, Guid BookId, int Days = 14);

@@ -11,17 +11,17 @@ public sealed class Category : Entity<CategoryId>
         Name = name;
         Description = description;
     }
- 
+
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
- 
+
     public static Category Create(string name, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("El nombre de la categoría no puede estar vacío.");
+            throw new DomainException("Category name cannot be empty.");
         return new Category(CategoryId.New(), name.Trim(), description?.Trim());
     }
- 
+
     public void Update(string name, string? description)
     {
         Name = name.Trim();

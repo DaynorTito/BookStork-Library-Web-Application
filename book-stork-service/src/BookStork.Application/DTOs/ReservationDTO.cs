@@ -1,14 +1,18 @@
-﻿namespace BookStork.Application.DTOs;
+﻿using BookStork.Application.DTOs.Book;
 
-public sealed record ReservationDto(
-    Guid Id,
-    Guid UserId,
-    string UserFullName,
-    Guid BookId,
-    string BookTitle,
-    string Status,
-    DateTime ReservedAt,
-    DateTime ExpiresAt,
-    DateTime? FulfilledAt);
- 
+namespace BookStork.Application.DTOs;
+
+public sealed record ReservationDto
+{
+    public Guid Id { get; init; }
+    public Guid UserId { get; init; }
+    public string UserFullName { get; init; } = string.Empty;
+    public BookSummaryDto Book { get; init; } = null!;
+    public string Status { get; init; } = string.Empty;
+    public DateTime ReservedAt { get; init; }
+    public DateTime ExpiresAt { get; init; }
+    public DateTime? FulfilledAt { get; init; }
+}
+
+
 public sealed record CreateReservationRequest(Guid UserId, Guid BookId);
