@@ -16,6 +16,14 @@ public sealed class WishlistItem : Entity<WishlistItemId>
         NotifyOnAvailable = notifyOnAvailable;
         AddedAt = addedAt;
     }
+    
+    public static WishlistItem Reconstitute(
+        WishlistItemId id,
+        UserId userId,
+        BookId bookId,
+        bool notifyOnAvailable,
+        DateTime addedAt)
+        => new(id, userId, bookId, notifyOnAvailable, addedAt);
 
     public UserId UserId { get; private set; } = default!;
     public BookId BookId { get; private set; } = default!;

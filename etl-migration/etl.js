@@ -13,16 +13,16 @@ const { v4: uuidv4 } = require('uuid');
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const API_KEY  = 'YOUR_GOOGLE_BOOKS_API_KEY_HERE';   //
+const API_KEY  = 'AIzaSyAVpR8HQgHIDjLE4qmisexPZGQJNxDXJg0';
 const BASE_URL = 'https://www.googleapis.com/books/v1/volumes';
-const TARGET   = 200;   // books to insert
+const TARGET   = 500;   // books to insert
 
 const DB = {
-  host    : 'localhost',
-  port    : 3306,
-  database: 'bookstork_dev',
+  host    : 'roundhouse.proxy.rlwy.net',
+  port    : 35873,
+  database: 'railway',
   user    : 'root',
-  password: '123456',
+  password: 'qoZbsldXGaNBNJSbLWwEccNYVKedgRIE',
 };
 
 /**
@@ -31,7 +31,6 @@ const DB = {
  */
 const SEARCH_QUERIES = [
   // Programming / Tech
-  'javascript web development',
   'python machine learning',
   'clean code software engineering',
   'database design sql',
@@ -164,12 +163,12 @@ async function getOrCreateCategory(conn, cache, name) {
   if (cache.has(name)) return cache.get(name);
   const id = uuidv4();
   await conn.execute(
-    'INSERT IGNORE INTO categories (Id, Name, Description) VALUES (?, ?, NULL)',
+    'INSERT IGNORE INTO Categories (Id, Name, Description) VALUES (?, ?, NULL)',
     [id, name],
   );
   // Re-read in case IGNORE swallowed a duplicate from a parallel run
   const [[row]] = await conn.execute(
-    'SELECT Id FROM categories WHERE Name = ?', [name],
+    'SELECT Id FROM Categories WHERE Name = ?', [name],
   );
   cache.set(name, row.Id);
   return row.Id;
@@ -179,11 +178,11 @@ async function getOrCreateGenre(conn, cache, name) {
   if (cache.has(name)) return cache.get(name);
   const id = uuidv4();
   await conn.execute(
-    'INSERT IGNORE INTO genres (Id, Name) VALUES (?, ?)',
+    'INSERT IGNORE INTO Genres (Id, Name) VALUES (?, ?)',
     [id, name],
   );
   const [[row]] = await conn.execute(
-    'SELECT Id FROM genres WHERE Name = ?', [name],
+    'SELECT Id FROM Genres WHERE Name = ?', [name],
   );
   cache.set(name, row.Id);
   return row.Id;
@@ -193,11 +192,11 @@ async function getOrCreateAuthor(conn, cache, name) {
   if (cache.has(name)) return cache.get(name);
   const id = uuidv4();
   await conn.execute(
-    'INSERT IGNORE INTO authors (Id, Name, Biography) VALUES (?, ?, NULL)',
+    'INSERT IGNORE INTO Authors (Id, Name, Biography) VALUES (?, ?, NULL)',
     [id, name],
   );
   const [[row]] = await conn.execute(
-    'SELECT Id FROM authors WHERE Name = ?', [name],
+    'SELECT Id FROM Authors WHERE Name = ?', [name],
   );
   cache.set(name, row.Id);
   return row.Id;
@@ -254,7 +253,7 @@ async function processVolume(conn, caches, item) {
 
   try {
     await conn.execute(
-      `INSERT INTO books
+      `INSERT INTO Books
          (Id, ISBN, Title, CategoryId, Publisher, PublishedDate, Description,
           PageCount, Height, Weight, Thickness, Language,
           AverageRating, Status, TotalCopies, AvailableCopies, CreatedAt, UpdatedAt)
@@ -289,13 +288,13 @@ async function processVolume(conn, caches, item) {
   // ── Relations ─────────────────────────────────────────────────────────────
   for (const aId of authorIds) {
     await conn.execute(
-      'INSERT IGNORE INTO bookauthors (BookId, AuthorId) VALUES (?, ?)',
+      'INSERT IGNORE INTO BookAuthors (BookId, AuthorId) VALUES (?, ?)',
       [bookId, aId],
     );
   }
   for (const gId of genreIds) {
     await conn.execute(
-      'INSERT IGNORE INTO bookgenres (BookId, GenreId) VALUES (?, ?)',
+      'INSERT IGNORE INTO BookGenres (BookId, GenreId) VALUES (?, ?)',
       [bookId, gId],
     );
   }
@@ -304,7 +303,7 @@ async function processVolume(conn, caches, item) {
   const imageUrl = imageLinks.thumbnail || imageLinks.smallThumbnail;
   if (imageUrl) {
     await conn.execute(
-      'INSERT INTO bookimages (Id, BookId, Url, IsPrimary) VALUES (?, ?, ?, 1)',
+      'INSERT INTO BookImages (Id, BookId, Url, IsPrimary) VALUES (?, ?, ?, 1)',
       [uuidv4(), bookId, imageUrl.substring(0, 500)],
     );
   }
@@ -329,16 +328,16 @@ async function main() {
   const authorCache   = new Map();
   const isbnSet       = new Set();
 
-  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM categories').then(([r]) => r.map(x => [x.Id, x.Name])))
+  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM Categories').then(([r]) => r.map(x => [x.Id, x.Name])))
     categoryCache.set(Name, Id);
 
-  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM genres').then(([r]) => r.map(x => [x.Id, x.Name])))
+  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM Genres').then(([r]) => r.map(x => [x.Id, x.Name])))
     genreCache.set(Name, Id);
 
-  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM authors').then(([r]) => r.map(x => [x.Id, x.Name])))
+  for (const [Id, Name] of await conn.execute('SELECT Id, Name FROM Authors').then(([r]) => r.map(x => [x.Id, x.Name])))
     authorCache.set(Name, Id);
 
-  for (const { ISBN } of await conn.execute('SELECT ISBN FROM books').then(([r]) => r))
+  for (const { ISBN } of await conn.execute('SELECT ISBN FROM Books').then(([r]) => r))
     isbnSet.add(ISBN);
 
   console.log(`  Pre-loaded: ${categoryCache.size} categories, ${genreCache.size} genres, ${authorCache.size} authors, ${isbnSet.size} ISBNs\n`);

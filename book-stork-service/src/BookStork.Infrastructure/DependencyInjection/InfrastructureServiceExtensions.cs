@@ -33,7 +33,9 @@ public static class InfrastructureServiceExtensions
                 {
                     sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
                     sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
-                }));
+                })
+                .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                );
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IBookRepository, BookRepository>();

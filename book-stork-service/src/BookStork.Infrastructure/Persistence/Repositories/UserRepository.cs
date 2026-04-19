@@ -15,15 +15,17 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(UserId id, CancellationToken ct = default)
     {
         var e = await _ctx.Users.AsNoTracking()
+            .Include(l => l.Loans)
             .FirstOrDefaultAsync(u => u.Id == id.Value && u.Status != "DELETED", ct);
-        return e is null ? null : UserMapper.ToDomain(e);
+        return e is null ? null : UserMapper.ToDomain(e, e.Loans.Select(l => l.Id).ToList());
     }
  
     public async Task<User?> GetByEmailAsync(Email email, CancellationToken ct = default)
     {
         var e = await _ctx.Users.AsNoTracking()
+            .Include(l => l.Loans)
             .FirstOrDefaultAsync(u => u.Email == email.Value && u.Status != "DELETED", ct);
-        return e is null ? null : UserMapper.ToDomain(e);
+        return e is null ? null : UserMapper.ToDomain(e, e.Loans.Select(l => l.Id).ToList());
     }
  
     public Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default)
@@ -31,10 +33,12 @@ public sealed class UserRepository : IUserRepository
  
     public async Task<(IReadOnlyList<User> Users, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken ct = default)
     {
-        var q = _ctx.Users.AsNoTracking().Where(u => u.Status != "DELETED").OrderBy(u => u.LastName);
+        var q = _ctx.Users.AsNoTracking()
+            .Include(l => l.Loans)
+            .Where(u => u.Status != "DELETED").OrderBy(u => u.LastName);
         var total = await q.CountAsync(ct);
         var list = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-        return (list.Select(UserMapper.ToDomain).ToList().AsReadOnly(), total);
+        return (list.Select((us) => UserMapper.ToDomain(us,  us.Loans.Select(l => l.Id).ToList())).ToList().AsReadOnly(), total);
     }
  
     public async Task AddAsync(User user, CancellationToken ct = default)

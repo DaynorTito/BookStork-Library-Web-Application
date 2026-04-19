@@ -1,4 +1,5 @@
 ﻿using BookStork.Domain.Entities;
+using BookStork.Domain.ValueObjects.Loan;
 using BookStork.Domain.ValueObjects.User;
 using BookStork.Infrastructure.Persistence.Entities;
 
@@ -16,7 +17,7 @@ public static class UserMapper
         CreatedAt = u.CreatedAt, UpdatedAt = u.UpdatedAt
     };
  
-    public static User ToDomain(UserEntity e)
+    public static User ToDomain(UserEntity e, List<Guid> loans)
     {
         var user = (User)Activator.CreateInstance(typeof(User),
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
@@ -27,7 +28,10 @@ public static class UserMapper
                 UserStatus.From(e.Status), LoanLimit.Create(e.LoanLimit),
                 NotificationPreference.From(e.NotificationPreference), e.CreatedAt
             }, null)!;
- 
+        foreach (var loan in loans)
+        {
+            user.AddActiveLoan(LoanId.Create(loan));
+        }
         if (e.UpdatedAt.HasValue)
             SetPrivate(user, "UpdatedAt", e.UpdatedAt);
  
