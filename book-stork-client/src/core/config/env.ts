@@ -1,1 +1,1 @@
-export const BASE_URL = 'http://bookstork-api-production.up.railway.app:8080'
+export const BASE_URL = 'https://bookstork-api-production.up.railway.app';
