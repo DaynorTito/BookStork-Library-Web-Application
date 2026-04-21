@@ -22,85 +22,114 @@ namespace BookStork.Infrastructure.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.AuthorEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Biography")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Authors", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookAuthorEntity", b =>
+                {
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("BookId", "AuthorId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("BookAuthors", (string)null);
+                });
+
             modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasMaxLength(254)
-                        .HasColumnType("varchar(254)")
-                        .HasColumnName("Author");
+                    b.Property<int>("AvailableCopies")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("AverageRating")
                         .HasPrecision(3, 2)
-                        .HasColumnType("decimal(3,2)")
-                        .HasColumnName("AverageRating");
+                        .HasColumnType("decimal(3,2)");
 
                     b.Property<Guid>("CategoryId")
-                        .HasColumnType("char(36)")
-                        .HasColumnName("CategoryId");
+                        .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("Description");
+                        .HasColumnType("longtext");
 
                     b.Property<decimal>("Height")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)")
-                        .HasColumnName("Height");
+                        .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("ISBN")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("ISBN");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("Language");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("Name");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<int>("PageCount")
-                        .HasColumnType("int")
-                        .HasColumnName("PageCount");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("PublishedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("PublishedDate");
+                        .HasColumnType("date");
 
                     b.Property<string>("Publisher")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("Publisher");
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<decimal>("Thickness")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)")
-                        .HasColumnName("Thickness");
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("TotalCopies")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("Weight")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)")
-                        .HasColumnName("Weight");
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("ISBN")
                         .IsUnique()
@@ -109,30 +138,304 @@ namespace BookStork.Infrastructure.Migrations
                     b.ToTable("Books", (string)null);
                 });
 
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookGenreEntity", b =>
+                {
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("GenreId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("BookId", "GenreId");
+
+                    b.HasIndex("GenreId");
+
+                    b.ToTable("BookGenres", (string)null);
+                });
+
             modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookImageEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("BookId")
-                        .HasColumnType("char(36)")
-                        .HasColumnName("BookId");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("IsPrimary")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("IsPrimary");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("Url");
+                        .HasColumnType("varchar(500)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BookId");
 
                     b.ToTable("BookImages", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.CategoryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.GenreEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Genres", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.LoanEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("LoanedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ReturnedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId", "Status");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("Loans", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.ReservationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FulfilledAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ReservedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "BookId", "Status");
+
+                    b.ToTable("Reservations", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.UserBookStatusEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "BookId")
+                        .IsUnique();
+
+                    b.ToTable("UserBookStatuses", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.UserEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("LoanLimit")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NotificationPreference")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Email");
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.WishlistItemEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("NotifyOnAvailable")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "BookId")
+                        .IsUnique();
+
+                    b.ToTable("WishlistItems", (string)null);
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookAuthorEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.AuthorEntity", "Author")
+                        .WithMany("BookAuthors")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany("BookAuthors")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Book");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.CategoryEntity", "Category")
+                        .WithMany("Books")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookGenreEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany("BookGenres")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.GenreEntity", "Genre")
+                        .WithMany("BookGenres")
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Genre");
                 });
 
             modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookImageEntity", b =>
@@ -146,9 +449,117 @@ namespace BookStork.Infrastructure.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.LoanEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany("Loans")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.UserEntity", "User")
+                        .WithMany("Loans")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.ReservationEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany("Reservations")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.UserEntity", "User")
+                        .WithMany("Reservations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.UserBookStatusEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.UserEntity", "User")
+                        .WithMany("BookStatuses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.WishlistItemEntity", b =>
+                {
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.BookEntity", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookStork.Infrastructure.Persistence.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.AuthorEntity", b =>
+                {
+                    b.Navigation("BookAuthors");
+                });
+
             modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.BookEntity", b =>
                 {
+                    b.Navigation("BookAuthors");
+
+                    b.Navigation("BookGenres");
+
                     b.Navigation("Images");
+
+                    b.Navigation("Loans");
+
+                    b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.CategoryEntity", b =>
+                {
+                    b.Navigation("Books");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.GenreEntity", b =>
+                {
+                    b.Navigation("BookGenres");
+                });
+
+            modelBuilder.Entity("BookStork.Infrastructure.Persistence.Entities.UserEntity", b =>
+                {
+                    b.Navigation("BookStatuses");
+
+                    b.Navigation("Loans");
+
+                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }

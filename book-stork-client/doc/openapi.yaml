@@ -1,0 +1,1391 @@
+openapi: 3.0.1
+info:
+  title: BookStork API
+  description: API con Arquitectura Hexagonal + DDD
+  version: v1
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/authors:
+    get:
+      tags:
+        - Authors
+      responses:
+        '200':
+          description: OK
+    post:
+      tags:
+        - Authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthorRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthorRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthorRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorDto'
+  /api/v1/books:
+    get:
+      tags:
+        - Books
+      parameters:
+        - name: Title
+          in: query
+          schema:
+            type: string
+        - name: AuthorId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: GenreId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: CategoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: Keyword
+          in: query
+          schema:
+            type: string
+        - name: Language
+          in: query
+          schema:
+            type: string
+        - name: SortBy
+          in: query
+          schema:
+            type: string
+        - name: Ascending
+          in: query
+          schema:
+            type: boolean
+        - name: Page
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: PageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookListDtoPagedResult'
+    post:
+      tags:
+        - Books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+  /api/v1/books/all:
+    get:
+      tags:
+        - Books
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookListDtoPagedResult'
+  '/api/v1/books/{id}':
+    get:
+      tags:
+        - Books
+      operationId: GetBookById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetailDto'
+    put:
+      tags:
+        - Books
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetailDto'
+    delete:
+      tags:
+        - Books
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+  /api/v1/books/reading-status:
+    post:
+      tags:
+        - Books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserBookStatusRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/SetUserBookStatusRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/SetUserBookStatusRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBookStatusDto'
+  /api/v1/categories:
+    get:
+      tags:
+        - Categories
+      responses:
+        '200':
+          description: OK
+    post:
+      tags:
+        - Categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '200':
+          description: OK
+  /api/v1/genres:
+    get:
+      tags:
+        - Genres
+      responses:
+        '200':
+          description: OK
+    post:
+      tags:
+        - Genres
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGenreRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateGenreRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateGenreRequest'
+      responses:
+        '200':
+          description: OK
+  /api/v1/loans:
+    get:
+      tags:
+        - Loans
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDtoPagedResult'
+    post:
+      tags:
+        - Loans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoanRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoanRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateLoanRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDto'
+  /api/v1/loans/me:
+    get:
+      tags:
+        - Loans
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDtoPagedResult'
+  '/api/v1/loans/{id}':
+    get:
+      tags:
+        - Loans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDto'
+  '/api/v1/loans/{id}/return':
+    post:
+      tags:
+        - Loans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDto'
+  /api/v1/reservations:
+    get:
+      tags:
+        - Reservations
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDtoPagedResult'
+    post:
+      tags:
+        - Reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDto'
+  /api/v1/reservations/me:
+    get:
+      tags:
+        - Reservations
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDtoPagedResult'
+  '/api/v1/reservations/{id}/cancel':
+    post:
+      tags:
+        - Reservations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDto'
+  /api/v1/users:
+    get:
+      tags:
+        - Users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDtoPagedResult'
+  '/api/v1/users/{id}':
+    get:
+      tags:
+        - Users
+      operationId: GetUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    put:
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+    delete:
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+  /api/v1/wishlist:
+    get:
+      tags:
+        - Wishlist
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishlistItemDto'
+    post:
+      tags:
+        - Wishlist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToWishlistRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/AddToWishlistRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/AddToWishlistRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishlistItemDto'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/api/v1/wishlist/{bookId}':
+    delete:
+      tags:
+        - Wishlist
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/api/v1/wishlist/{bookId}/notify':
+    patch:
+      tags:
+        - Wishlist
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleWishlistNotificationRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/ToggleWishlistNotificationRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/ToggleWishlistNotificationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishlistItemDto'
+components:
+  schemas:
+    AddToWishlistRequest:
+      type: object
+      properties:
+        bookId:
+          type: string
+          format: uuid
+        notifyOnAvailable:
+          type: boolean
+      additionalProperties: false
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          nullable: true
+        tokenType:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserDto'
+      additionalProperties: false
+    AuthorDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+        biography:
+          type: string
+          nullable: true
+      additionalProperties: false
+    BookDetailDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        isbn:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorDto'
+          nullable: true
+        category:
+          $ref: '#/components/schemas/CategoryDto'
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreDto'
+          nullable: true
+        publisher:
+          type: string
+          nullable: true
+        publishedDate:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+        pageCount:
+          type: integer
+          format: int32
+        height:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        thickness:
+          type: number
+          format: double
+        language:
+          type: string
+          nullable: true
+        averageRating:
+          type: number
+          format: double
+        status:
+          type: string
+          nullable: true
+        availableCopies:
+          type: integer
+          format: int32
+        totalCopies:
+          type: integer
+          format: int32
+        images:
+          type: array
+          items:
+            type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      additionalProperties: false
+    BookListDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        isbn:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        authorName:
+          type: string
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        genres:
+          type: array
+          items:
+            type: string
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        averageRating:
+          type: number
+          format: double
+        status:
+          type: string
+          nullable: true
+        availableCopies:
+          type: integer
+          format: int32
+        totalCopies:
+          type: integer
+          format: int32
+        publishedDate:
+          type: string
+          format: date
+        coverImageUrl:
+          type: string
+          nullable: true
+      additionalProperties: false
+    BookListDtoPagedResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookListDto'
+          nullable: true
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+          readOnly: true
+        hasNextPage:
+          type: boolean
+          readOnly: true
+        hasPreviousPage:
+          type: boolean
+          readOnly: true
+      additionalProperties: false
+    BookSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        isbn:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        authorNames:
+          type: string
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        coverImageUrl:
+          type: string
+          nullable: true
+        averageRating:
+          type: number
+          format: double
+        language:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CreateAuthorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        biography:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CreateBookRequest:
+      type: object
+      properties:
+        isbn:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        authorIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        categoryId:
+          type: string
+          format: uuid
+        genreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        publisher:
+          type: string
+          nullable: true
+        publishedDate:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+        pageCount:
+          type: integer
+          format: int32
+        height:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        thickness:
+          type: number
+          format: double
+        language:
+          type: string
+          nullable: true
+        averageRating:
+          type: number
+          format: double
+        totalCopies:
+          type: integer
+          format: int32
+        images:
+          type: array
+          items:
+            type: string
+          nullable: true
+      additionalProperties: false
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CreateGenreRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CreateLoanRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        bookId:
+          type: string
+          format: uuid
+        days:
+          type: integer
+          format: int32
+      additionalProperties: false
+    CreateReservationRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        bookId:
+          type: string
+          format: uuid
+      additionalProperties: false
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        loanLimit:
+          type: integer
+          format: int32
+        notificationPreference:
+          type: string
+          nullable: true
+      additionalProperties: false
+    GenreDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+      additionalProperties: false
+    LoanDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userFullName:
+          type: string
+          nullable: true
+        book:
+          $ref: '#/components/schemas/BookSummaryDto'
+        status:
+          type: string
+          nullable: true
+        loanedAt:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+        returnedAt:
+          type: string
+          format: date-time
+          nullable: true
+        isOverdue:
+          type: boolean
+        daysRemaining:
+          type: integer
+          format: int32
+      additionalProperties: false
+    LoanDtoPagedResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoanDto'
+          nullable: true
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+          readOnly: true
+        hasNextPage:
+          type: boolean
+          readOnly: true
+        hasPreviousPage:
+          type: boolean
+          readOnly: true
+      additionalProperties: false
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+      additionalProperties: false
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: integer
+          format: int32
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+      additionalProperties: { }
+    ReservationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userFullName:
+          type: string
+          nullable: true
+        book:
+          $ref: '#/components/schemas/BookSummaryDto'
+        status:
+          type: string
+          nullable: true
+        reservedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        fulfilledAt:
+          type: string
+          format: date-time
+          nullable: true
+      additionalProperties: false
+    ReservationDtoPagedResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationDto'
+          nullable: true
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+          readOnly: true
+        hasNextPage:
+          type: boolean
+          readOnly: true
+        hasPreviousPage:
+          type: boolean
+          readOnly: true
+      additionalProperties: false
+    SetUserBookStatusRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        bookId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          nullable: true
+      additionalProperties: false
+    ToggleWishlistNotificationRequest:
+      type: object
+      properties:
+        notifyOnAvailable:
+          type: boolean
+      additionalProperties: false
+    UpdateBookRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        authorIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        categoryId:
+          type: string
+          format: uuid
+        genreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        publisher:
+          type: string
+          nullable: true
+        publishedDate:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+        pageCount:
+          type: integer
+          format: int32
+        averageRating:
+          type: number
+          format: double
+        height:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        thickness:
+          type: number
+          format: double
+        language:
+          type: string
+          nullable: true
+      additionalProperties: false
+    UpdateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        notificationPreference:
+          type: string
+          nullable: true
+      additionalProperties: false
+    UserBookStatusDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        bookId:
+          type: string
+          format: uuid
+        bookTitle:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: false
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        fullName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        loanLimit:
+          type: integer
+          format: int32
+        activeLoansCount:
+          type: integer
+          format: int32
+        notificationPreference:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      additionalProperties: false
+    UserDtoPagedResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDto'
+          nullable: true
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+          readOnly: true
+        hasNextPage:
+          type: boolean
+          readOnly: true
+        hasPreviousPage:
+          type: boolean
+          readOnly: true
+      additionalProperties: false
+    WishlistItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        book:
+          $ref: '#/components/schemas/BookSummaryDto'
+        notifyOnAvailable:
+          type: boolean
+        addedAt:
+          type: string
+          format: date-time
+      additionalProperties: false

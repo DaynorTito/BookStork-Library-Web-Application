@@ -4,74 +4,68 @@ using BookStork.Application.Ports;
 using BookStork.Domain.Entities;
 using BookStork.Domain.Exceptions;
 using BookStork.Domain.Repositories;
+using BookStork.Domain.ValueObjects.Author;
 using BookStork.Domain.ValueObjects.Book;
+using BookStork.Domain.ValueObjects.Category;
+using BookStork.Domain.ValueObjects.Genre;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace BookStork.Application.Books.Commands;
 
 public sealed record CreateBookCommand(
-    string ISBN,
-    string Name,
-    string Author,
-    string Publisher,
-    DateOnly PublishedDate,
-    string Description,
-    int PageCount,
-    Guid CategoryId,
-    decimal Height,
-    decimal Weight,
-    decimal Thickness,
-    decimal AverageRating,
-    string Language,
-    List<string> Images
-) : IRequest<Guid>;
+    string ISBN, string Title, List<Guid> AuthorId, Guid CategoryId, List<Guid> GenreIds,
+    string Publisher, DateOnly PublishedDate, string Description, int PageCount,
+    decimal Height, decimal Weight, decimal Thickness, string Language,
+    decimal AverageRating, int TotalCopies, List<string> Images) : IRequest<Guid>;
 
-public sealed class CreateUserCommandValidator : AbstractValidator<CreateBookCommand>
+public sealed class CreateBookCommandValidator : AbstractValidator<CreateBookCommand>
 {
-    public CreateUserCommandValidator()
+    public CreateBookCommandValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Author).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Images).NotEmpty();
+        RuleFor(x => x.ISBN).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.AuthorId).NotEmpty();
+        RuleFor(x => x.CategoryId).NotEmpty();
+        RuleFor(x => x.Publisher).NotEmpty();
+        RuleFor(x => x.Description).NotEmpty();
+        RuleFor(x => x.PageCount).GreaterThan(0);
+        RuleFor(x => x.TotalCopies).GreaterThan(0);
+        RuleFor(x => x.AverageRating).InclusiveBetween(0, 5);
+        RuleFor(x => x.Images).NotEmpty().WithMessage("At least one image is required.");
     }
 }
 
 public sealed class CreateBookCommandHandler : IRequestHandler<CreateBookCommand, Guid>
 {
-    private readonly IBookRepository _bookRepository;
-    private readonly IMapper _mapper;
-    private readonly IDomainEventDispatcher _eventDispatcher;
-    
+    private readonly IBookRepository _bookRepo;
+    private readonly IDomainEventDispatcher _dispatcher;
+    private readonly ILogger _logger;
 
-    public CreateBookCommandHandler(
-        IBookRepository bookRepository, 
-        IDomainEventDispatcher eventDispatcher,
-        IMapper mapper)
+    public CreateBookCommandHandler(IBookRepository bookRepo, IDomainEventDispatcher dispatcher, ILogger<CreateBookCommandHandler> logger)
+    { _bookRepo = bookRepo; _dispatcher = dispatcher; _logger = logger; }
+
+    public async Task<Guid> Handle(CreateBookCommand r, CancellationToken ct)
     {
-        _bookRepository = bookRepository;
-        _eventDispatcher = eventDispatcher;
-        _mapper = mapper;
-    }
-    
-    public async Task<Guid> Handle(CreateBookCommand request, CancellationToken cancellationToken)
-    {
-        if (await _bookRepository.ExistsByISBNAsync(request.ISBN, cancellationToken))
-        {
-           throw new ConflictException($"Book already exists with ISBN {request.ISBN}");
-        }
-        
-        var bookImages = request.Images.Select(image => new BookImage(image)).ToList();
-        
-        var book = Book.Create(request.ISBN, request.Name, request.Author, request.Publisher, request.PublishedDate, 
-            request.Description, request.PageCount, request.Height, request.Weight, request.Thickness, request.CategoryId,
-            request.Language,request.AverageRating, bookImages);
-     
-        await _bookRepository.AddAsync(book, cancellationToken);
-        await _bookRepository.SaveChangesAsync(cancellationToken);
-        
-       await _eventDispatcher.DispatchAsync([book], cancellationToken);
-       
-       return book.Id;
+        _logger.LogInformation("Creating a new book");
+        if (await _bookRepo.ExistsByISBNAsync(r.ISBN, ct))
+            throw new ConflictException($"A book with ISBN '{r.ISBN}' already exists.");
+        _logger.LogInformation("Pass validation");
+
+        var genreIds = r.GenreIds.Select(GenreId.From).ToList();
+        var images = r.Images.Select(img => new BookImage(img)).ToList();
+        _logger.LogInformation("Pass MAPS");
+
+        var book = Book.Create(r.ISBN, r.Title, r.AuthorId.Select(id => AuthorId.From(id)).ToList(), r.Publisher,
+            r.PublishedDate, r.Description, r.PageCount, r.Height, r.Weight, r.Thickness, CategoryId.From(r.CategoryId), r.Language,
+            r.TotalCopies, r.AverageRating, images, genreIds);
+        _logger.LogInformation("Pass CREATE");
+
+        await _bookRepo.AddAsync(book, ct);
+        await _bookRepo.SaveChangesAsync(ct);
+        await _dispatcher.DispatchAsync([book], ct);
+
+        return book.Id.Value;
     }
 }

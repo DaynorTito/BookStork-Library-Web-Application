@@ -1,91 +1,162 @@
-﻿using BookStork.Domain.Entities;
+﻿using BookStork.Application.DTOs;
+using BookStork.Application.DTOs.Book;
+using BookStork.Domain.Entities;
+using BookStork.Domain.ValueObjects.Author;
 using BookStork.Domain.ValueObjects.Book;
+using BookStork.Domain.ValueObjects.Category;
+using BookStork.Domain.ValueObjects.Genre;
 using BookStork.Infrastructure.Persistence.Entities;
 
 namespace BookStork.Infrastructure.Persistence.Mappings;
 
 public static class BookMapper
 {
-    public static BookEntity ToEntity(Book book) => new()
+    public static BookEntity ToEntity(Book b) => new()
     {
-        Id = book.Id,
-        ISBN = book.ISBN,
-        Name = book.Name,
-        Author = book.Author,
-        Publisher = book.Publisher,
-        PublishedDate = book.PublishedDate,
-        Description = book.Description,
-        PageCount = book.PageCount,
-        Height = book.Dimensions.Height,
-        Weight = book.Dimensions.Weight,
-        Thickness = book.Dimensions.Thickness,
-        CategoryId = book.CategoryId,
-        AverageRating = book.Metadata.AverageRating,
-        Language = book.Metadata.Language,
-        CreatedAt = book.DateCreated,
-        UpdatedAt = book.UpdatedAt,
-        Images = book.Images.Select(i => new BookImageEntity
+        Id = b.Id.Value,
+        ISBN = b.ISBN,
+        Title = b.Name,
+        CategoryId = b.CategoryId.Value,
+        Publisher = b.Publisher,
+        PublishedDate = b.PublishedDate,
+        Description = b.Description,
+        PageCount = b.PageCount,
+        Height = b.Dimensions.Height,
+        Weight = b.Dimensions.Weight,
+        Thickness = b.Dimensions.Thickness,
+        Language = b.Metadata.Language,
+        AverageRating = b.Metadata.AverageRating,
+        Status = b.Status.Value,
+        TotalCopies = b.TotalCopies,
+        AvailableCopies = b.AvailableCopies,
+        CreatedAt = b.DateCreated,
+        UpdatedAt = b.UpdatedAt,
+        Images = b.Images.Select((img, i) => new BookImageEntity
         {
             Id = Guid.NewGuid(),
-            BookId = book.Id,
-            Url = i.Url,
-            IsPrimary = book.Images.IndexOf(i) == 0
+            BookId = b.Id.Value,
+            Url = img.Url,
+            IsPrimary = i == 0
+        }).ToList(),
+        BookGenres = b.GenreIds.Select(gid => new BookGenreEntity
+        {
+            BookId = b.Id.Value,
+            GenreId = gid.Value
+        }).ToList(),
+        BookAuthors = b.AuthorIds.Select(aid => new BookAuthorEntity
+        {
+            BookId = b.Id.Value,
+            AuthorId = aid.Value
         }).ToList()
     };
- 
-    public static Book ToDomain(BookEntity entity)
+
+    public static Book ToDomain(BookEntity e)
     {
-        var images = entity.Images
+        var images = e.Images
+            .OrderByDescending(i => i.IsPrimary)
             .Select(i => new BookImage(i.Url))
             .ToList();
 
-        var book = new Book(
-            entity.Id,
-            entity.ISBN,
-            entity.Name,
-            entity.Author,
-            entity.Publisher,
-            entity.PublishedDate,
-            entity.Description,
-            entity.PageCount,
-            new BookDimensions(entity.Height, entity.Weight, entity.Thickness),
-            entity.CategoryId,
-            new BookMetadata(entity.Language, entity.AverageRating),
+        var authorIds = e.BookAuthors
+            .Select(ba => AuthorId.From(ba.AuthorId))
+            .ToList();
+
+        var genreIds = e.BookGenres
+            .Select(bg => GenreId.From(bg.GenreId))
+            .ToList();
+
+        return Book.Rehydrate(
+            BookId.From(e.Id),
+            e.ISBN,
+            e.Title,
+            authorIds,
+            e.Publisher,
+            e.PublishedDate,
+            e.Description,
+            e.TotalCopies,
+            e.PageCount,
+            new BookDimensions(e.Height, e.Weight, e.Thickness),
+            CategoryId.From(e.CategoryId),
+            new BookMetadata(e.Language, e.AverageRating),
             images,
-            entity.CreatedAt);
-        if (entity.UpdatedAt.HasValue)
-        {
-            typeof(Book)
-                .GetProperty(nameof(Book.UpdatedAt),
-                    System.Reflection.BindingFlags.Public |
-                    System.Reflection.BindingFlags.Instance)
-                ?.SetValue(book, entity.UpdatedAt);
-        }
-        return book;
+            genreIds,
+            e.AvailableCopies,
+            BookAvailabilityStatus.From(e.Status),
+            e.CreatedAt,
+            e.UpdatedAt
+        );
     }
- 
-    public static void UpdateEntity(BookEntity entity, Book book)
+
+    public static BookDetailDto ToDetailDto(BookEntity e) => new()
     {
-        entity.Name = book.Name;
-        entity.Author = book.Author;
-        entity.Publisher = book.Publisher;
-        entity.PublishedDate = book.PublishedDate;
-        entity.Description = book.Description;
-        entity.PageCount = book.PageCount;
-        entity.Height = book.Dimensions.Height;
-        entity.Weight = book.Dimensions.Weight;
-        entity.Thickness = book.Dimensions.Thickness;
-        entity.CategoryId = book.CategoryId;
-        entity.AverageRating = book.Metadata.AverageRating;
-        entity.Language = book.Metadata.Language;
-        entity.UpdatedAt = book.UpdatedAt;
- 
-        entity.Images = book.Images.Select(i => new BookImageEntity
+        Id          = e.Id,
+        ISBN        = e.ISBN,
+        Title       = e.Title,
+        Authors     = e.BookAuthors.Select(ba => new AuthorDto
         {
-            Id = Guid.NewGuid(),
-            BookId = book.Id,
-            Url = i.Url,
-            IsPrimary = book.Images.IndexOf(i) == 0
+            Id        = ba.Author.Id,
+            Name      = ba.Author.Name,
+            Biography = ba.Author.Biography
+        }).ToList(),
+        Category    = new CategoryDto
+        {
+            Id          = e.Category.Id,
+            Name        = e.Category.Name,
+            Description = e.Category.Description
+        },
+        Genres      = e.BookGenres.Select(bg => new GenreDto
+        {
+            Id   = bg.Genre.Id,
+            Name = bg.Genre.Name
+        }).ToList(),
+        Publisher    = e.Publisher,
+        PublishedDate = e.PublishedDate,
+        Description  = e.Description,
+        PageCount    = e.PageCount,
+        Height       = e.Height,
+        Weight       = e.Weight,
+        Thickness    = e.Thickness,
+        Language     = e.Language,
+        AverageRating = e.AverageRating,
+        Status       = e.Status,
+        AvailableCopies = e.AvailableCopies,
+        TotalCopies  = e.TotalCopies,
+        Images       = e.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.Url).ToList(),
+        CreatedAt    = e.CreatedAt,
+        UpdatedAt    = e.UpdatedAt
+    };
+
+    public static void Update(BookEntity e, Book b)
+    {
+        e.Title = b.Name;
+        e.CategoryId = b.CategoryId.Value;
+        e.Publisher = b.Publisher;
+        e.PublishedDate = b.PublishedDate;
+        e.Description = b.Description;
+        e.PageCount = b.PageCount;
+        e.Height = b.Dimensions.Height;
+        e.Weight = b.Dimensions.Weight;
+        e.Thickness = b.Dimensions.Thickness;
+        e.Language = b.Metadata.Language;
+        e.AverageRating = b.Metadata.AverageRating;
+        e.Status = b.Status.Value;
+        e.AvailableCopies = b.AvailableCopies;
+        e.UpdatedAt = b.UpdatedAt;
+        e.BookAuthors = b.AuthorIds.Select(aid => new BookAuthorEntity
+        {
+            BookId = b.Id.Value,
+            AuthorId = aid.Value
+        }).ToList();
+        e.BookGenres = b.GenreIds.Select(gid => new BookGenreEntity
+        {
+            BookId = b.Id.Value,
+            GenreId = gid.Value
         }).ToList();
     }
+
+    private static void SetPrivate(object obj, string prop, object? val)
+        => obj.GetType()
+              .GetProperty(prop,
+                  System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+              ?.SetValue(obj, val);
 }

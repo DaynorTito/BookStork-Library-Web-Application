@@ -18,3 +18,8 @@ public class ConflictException : DomainException
 {
     public ConflictException(string message) : base(message) { }
 }
+
+public class UnauthorizedException : DomainException
+{
+    public UnauthorizedException(string message = "Not authorized.") : base(message) { }
+}

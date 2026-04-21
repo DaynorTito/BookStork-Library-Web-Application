@@ -4,8 +4,6 @@ namespace BookStork.Domain.Entities;
 
 public abstract class Entity<TId> : AggregateRoot
 {
-    private readonly List<IDomainEvent> _domainEvents = [];
- 
     protected Entity(TId id) => Id = id;
     protected Entity() { }
 

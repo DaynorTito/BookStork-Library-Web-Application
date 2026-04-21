@@ -1,0 +1,55 @@
+services:
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: bookstork_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: ./book-stork-service
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: >-
+        Server=db;Port=3306;Database=bookstork_dev;
+        User=root;Password=123456;
+        AllowPublicKeyRetrieval=true;SslMode=None;
+      Jwt__Secret: dev_secret_clave_muy_larga_para_desarrollo_local_32chars
+      Jwt__Issuer: BookStork
+      Jwt__Audience: BookStorkUsers
+      Jwt__ExpirationHours: "24"
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./book-stork-client
+      args:
+        # Browser-facing URL — must be reachable from the user's machine
+        VITE_API_URL: http://localhost:5000
+    restart: unless-stopped
+    ports:
+      # Port 5173 keeps the default CORS policy happy (AllowFrontend allows localhost:5173)
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
